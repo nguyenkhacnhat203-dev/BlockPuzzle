@@ -1071,7 +1071,12 @@ MonoBehaviour:
   cellSize: 1.28
   CellInGridPrefab: {fileID: 2768128891988082165, guid: 0c0cbf848d497544ca4aa354d4de5e55, type: 3}
   cellParent: {fileID: 123630241}
-  ghostAlpha: 0.6
+  allCellPrefabs:
+  - {fileID: 8665571547860709709, guid: 64ee25ce4998d6040ac1324956bf7a4b, type: 3}
+  - {fileID: 3739872423994888979, guid: 81363945628148544ae650202db68198, type: 3}
+  - {fileID: 4577284984559413130, guid: 152b9146e56cad7479b7ca73bef1c61d, type: 3}
+  - {fileID: 93981466162309309, guid: 8ade0eb128147c34b857c542fc4b329a, type: 3}
+  - {fileID: 9157638143103429339, guid: 219f4c9f09d8e1942b4cf66acc2a5dd5, type: 3}
 --- !u!1 &1150171749
 GameObject:
   m_ObjectHideFlags: 0

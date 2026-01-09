@@ -6,9 +6,8 @@ public class BlockDrag : MonoBehaviour
 {
     public static System.Action<Block> OnBlockPlaced;
 
-    [Header("Drag Settings")]
-    public float dragYOffset = 1.0f;
-    public float scaleWhileDragging = 1.0f;
+    public float dragYOffset = 1f;
+    public float scaleWhileDragging = 1f;
     public float scaleInTray = 0.6f;
 
     private Vector3 startPos;
@@ -16,7 +15,7 @@ public class BlockDrag : MonoBehaviour
     private Camera cam;
     private Board board;
     private Block block;
-    private bool isPlaced = false;
+    private bool isPlaced;
 
     void Awake()
     {
@@ -30,8 +29,10 @@ public class BlockDrag : MonoBehaviour
     void OnMouseDown()
     {
         if (isPlaced) return;
+
         block.SetCellsSortingOrder(10);
         transform.localScale = Vector3.one * scaleWhileDragging;
+
         Vector3 mousePos = GetMouseWorldPos();
         dragOffset = transform.position - mousePos;
         dragOffset.y += dragYOffset;
@@ -40,8 +41,21 @@ public class BlockDrag : MonoBehaviour
     void OnMouseDrag()
     {
         if (isPlaced) return;
+
         transform.position = GetMouseWorldPos() + dragOffset;
-        UpdateGhostAndHighlight();
+
+        List<Vector2Int> cells = GetBoardCellsUnderMouse();
+
+        if (board.CanPlaceBlock(cells))
+        {
+            board.ShowGhost(cells, block.GetCellPrefab());
+            board.CalculateWillClearCells(cells);
+            board.ShowClearPreview(block.GetCellPrefab());
+        }
+        else
+        {
+            board.ClearGhost();
+        }
     }
 
     void OnMouseUp()
@@ -57,36 +71,18 @@ public class BlockDrag : MonoBehaviour
         }
         else
         {
-            board.ResetHighlightedCells();
             ReturnToTray();
-        }
-    }
-
-    Vector3 GetMouseWorldPos() { Vector3 pos = cam.ScreenToWorldPoint(Input.mousePosition); pos.z = 0; return pos; }
-
-    void UpdateGhostAndHighlight()
-    {
-        List<Vector2Int> cells = GetBoardCellsUnderMouse();
-        if (board.CanPlaceBlock(cells))
-        {
-            board.ShowGhost(cells, block.GetCellPrefab());
-            board.HighlightLines(cells, block.GetCellPrefab());
-        }
-        else
-        {
-            board.ClearGhost();
-            board.ResetHighlightedCells();
         }
     }
 
     bool TryPlace()
     {
         List<Vector2Int> cells = GetBoardCellsUnderMouse();
+
         if (board.CanPlaceBlock(cells))
         {
-            AudioManager.Instance.DropBlock();
-
             board.PlaceBlock(cells, transform, block.GetCellPrefab());
+            AudioManager.Instance.DropBlock();
             return true;
         }
         return false;
@@ -98,6 +94,13 @@ public class BlockDrag : MonoBehaviour
         transform.position = startPos;
         transform.localScale = Vector3.one * scaleInTray;
         board.ClearGhost();
+    }
+
+    Vector3 GetMouseWorldPos()
+    {
+        Vector3 pos = cam.ScreenToWorldPoint(Input.mousePosition);
+        pos.z = 0;
+        return pos;
     }
 
     List<Vector2Int> GetBoardCellsUnderMouse()

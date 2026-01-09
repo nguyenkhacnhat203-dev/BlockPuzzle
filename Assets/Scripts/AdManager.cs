@@ -21,6 +21,7 @@ public class AdManager : Singleton<AdManager>
 
     private void Start()
     {
+        Application.targetFrameRate = 60;
         if (IsNoAds)
         {
             Debug.Log("No Ads Enabled - Skip Ads Init");

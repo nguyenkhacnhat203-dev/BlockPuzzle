@@ -50,15 +50,16 @@ public class Block : MonoBehaviour
         selectedCellPrefab = cellPrefabs[Random.Range(0, cellPrefabs.Count)];
 
         Vector2Int[] randomShapeArr = shapes[Random.Range(0, shapes.Count)];
-
         logicalShape.Clear();
         logicalShape.AddRange(randomShapeArr);
 
         foreach (var p in logicalShape)
         {
             GameObject cell = Instantiate(selectedCellPrefab, transform);
-            cell.transform.localPosition = new Vector3(p.x * cellSize, p.y * cellSize, 0);
 
+            cell.name = selectedCellPrefab.name;
+
+            cell.transform.localPosition = new Vector3(p.x * cellSize, p.y * cellSize, 0);
             SpriteRenderer sr = cell.GetComponent<SpriteRenderer>();
             if (sr != null) sr.sortingOrder = 3;
         }

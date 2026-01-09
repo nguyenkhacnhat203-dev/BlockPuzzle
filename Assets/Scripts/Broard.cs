@@ -1,230 +1,347 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
-using System.Collections;
 
 public class Board : MonoBehaviour
 {
     [Header("Board Size")]
     public int width = 8;
     public int height = 8;
-    public float cellSize = 1f;
+    public float cellSize = 1.28f;
 
     [Header("Grid Prefab")]
     public GameObject CellInGridPrefab;
     public Transform cellParent;
 
-    [Header("Ghost Preview")]
-    public float ghostAlpha = 0.6f;
+    [Header("Save / Load")]
+    public List<GameObject> allCellPrefabs = new List<GameObject>();
 
     private GameObject[,] gridObjects;
     private Vector2 origin;
+
     private List<GameObject> ghostCells = new List<GameObject>();
 
-    private List<GameObject> highlightedCells = new List<GameObject>();
-    private Dictionary<GameObject, Sprite> originalSprites = new Dictionary<GameObject, Sprite>();
-    private Dictionary<GameObject, Color> originalColors = new Dictionary<GameObject, Color>();
+    private List<GameObject> previewClearCells = new List<GameObject>();
+    private Dictionary<Vector2Int, SpriteRenderer> hiddenRealCells =
+        new Dictionary<Vector2Int, SpriteRenderer>();
+
+    private HashSet<Vector2Int> willClearCells = new HashSet<Vector2Int>();
 
     void Awake()
     {
         gridObjects = new GameObject[width, height];
-        origin = (Vector2)transform.position - new Vector2(width * cellSize / 2f, height * cellSize / 2f);
+        origin = (Vector2)transform.position -
+                 new Vector2(width * cellSize / 2f, height * cellSize / 2f);
+
         GenerateCells();
+    }
+
+    void Start()
+    {
+        Invoke(nameof(LoadBoardData), 0.01f);
     }
 
     void GenerateCells()
     {
         if (cellParent == null)
-        {
             cellParent = new GameObject("Cells").transform;
-            cellParent.SetParent(transform);
-            cellParent.localPosition = Vector3.zero;
-        }
 
         for (int x = 0; x < width; x++)
         {
             for (int y = 0; y < height; y++)
             {
-                Vector2 worldPos = CellToWorld(x, y);
                 if (CellInGridPrefab)
                 {
-                    GameObject cell = Instantiate(CellInGridPrefab, worldPos, Quaternion.identity, cellParent);
-                    cell.name = $"Cell_{x}_{y}";
-                    if (cell.GetComponent<SpriteRenderer>()) cell.GetComponent<SpriteRenderer>().sortingOrder = 0;
+                    Instantiate(
+                        CellInGridPrefab,
+                        CellToWorld(x, y),
+                        Quaternion.identity,
+                        cellParent
+                    );
                 }
             }
         }
     }
 
-    public Vector2 CellToWorld(int x, int y) => origin + new Vector2(x * cellSize + cellSize / 2f, y * cellSize + cellSize / 2f);
-    public Vector2Int WorldToCell(Vector2 worldPos)
+
+    public void CalculateWillClearCells(List<Vector2Int> potentialCells)
     {
-        int x = Mathf.FloorToInt((worldPos.x - origin.x + cellSize / 2f) / cellSize);
-        int y = Mathf.FloorToInt((worldPos.y - origin.y + cellSize / 2f) / cellSize);
-        return new Vector2Int(x, y);
-    }
-
-    public bool IsInside(int x, int y) => x >= 0 && x < width && y >= 0 && y < height;
-    public bool IsEmpty(int x, int y) => IsInside(x, y) && gridObjects[x, y] == null;
-
-    public bool CanPlaceBlock(List<Vector2Int> cells)
-    {
-        foreach (var c in cells)
-            if (!IsInside(c.x, c.y) || !IsEmpty(c.x, c.y)) return false;
-        return true;
-    }
-
-    public void PlaceBlock(List<Vector2Int> cellCoords, Transform blockTransform, GameObject cellPrefab)
-    {
-        List<Transform> children = new List<Transform>();
-        foreach (Transform child in blockTransform) children.Add(child);
-
-        for (int i = 0; i < cellCoords.Count; i++)
-        {
-            Vector2Int coord = cellCoords[i];
-            GameObject cellObj = children[i].gameObject;
-            cellObj.GetComponent<SpriteRenderer>().sortingOrder = 2;
-            gridObjects[coord.x, coord.y] = cellObj;
-            cellObj.transform.SetParent(cellParent);
-            cellObj.transform.position = CellToWorld(coord.x, coord.y);
-        }
-
-        ResetHighlightedCells();
-        StartCoroutine(CheckLinesRoutine(cellPrefab));
-    }
-
-    public void HighlightLines(List<Vector2Int> potentialCells, GameObject cellPrefab)
-    {
-        ResetHighlightedCells();
-        if (cellPrefab == null) return;
-
-        SpriteRenderer prefabSr = cellPrefab.GetComponent<SpriteRenderer>();
-        Sprite targetSprite = prefabSr.sprite;
-        Color targetColor = prefabSr.color;
-
-        List<int> rows = new List<int>();
-        List<int> cols = new List<int>();
+        willClearCells.Clear();
 
         bool[,] tempGrid = new bool[width, height];
+
         for (int x = 0; x < width; x++)
             for (int y = 0; y < height; y++)
                 tempGrid[x, y] = gridObjects[x, y] != null;
 
         foreach (var c in potentialCells)
-            if (IsInside(c.x, c.y)) tempGrid[c.x, c.y] = true;
+            if (IsInside(c.x, c.y))
+                tempGrid[c.x, c.y] = true;
 
         for (int y = 0; y < height; y++)
         {
             bool full = true;
-            for (int x = 0; x < width; x++) if (!tempGrid[x, y]) { full = false; break; }
-            if (full) rows.Add(y);
+            for (int x = 0; x < width; x++)
+                if (!tempGrid[x, y]) { full = false; break; }
+
+            if (full)
+                for (int x = 0; x < width; x++)
+                    willClearCells.Add(new Vector2Int(x, y));
         }
+
         for (int x = 0; x < width; x++)
         {
             bool full = true;
-            for (int y = 0; y < height; y++) if (!tempGrid[x, y]) { full = false; break; }
-            if (full) cols.Add(x);
-        }
+            for (int y = 0; y < height; y++)
+                if (!tempGrid[x, y]) { full = false; break; }
 
-        foreach (int y in rows) for (int x = 0; x < width; x++) ApplyVisualToCell(x, y, targetSprite, targetColor);
-        foreach (int x in cols) for (int y = 0; y < height; y++) ApplyVisualToCell(x, y, targetSprite, targetColor);
+            if (full)
+                for (int y = 0; y < height; y++)
+                    willClearCells.Add(new Vector2Int(x, y));
+        }
     }
 
-    void ApplyVisualToCell(int x, int y, Sprite newSprite, Color newColor)
+
+    public void ShowClearPreview(GameObject cellPrefab)
     {
-        GameObject obj = gridObjects[x, y];
-        if (obj != null)
+        ClearPreview();
+
+        SpriteRenderer src = cellPrefab.GetComponent<SpriteRenderer>();
+
+        foreach (var pos in willClearCells)
         {
-            SpriteRenderer sr = obj.GetComponent<SpriteRenderer>();
-            if (!originalSprites.ContainsKey(obj))
+            if (!IsInside(pos.x, pos.y)) continue;
+
+            GameObject real = gridObjects[pos.x, pos.y];
+            if (real != null)
             {
-                originalSprites.Add(obj, sr.sprite);
-                originalColors.Add(obj, sr.color);
-                highlightedCells.Add(obj);
+                SpriteRenderer realSR = real.GetComponent<SpriteRenderer>();
+                if (realSR != null)
+                {
+                    realSR.enabled = false;
+                    hiddenRealCells[pos] = realSR;
+                }
             }
-            sr.sprite = newSprite;
-            sr.color = newColor;
+
+            GameObject preview = Instantiate(
+                cellPrefab,
+                CellToWorld(pos.x, pos.y),
+                Quaternion.identity,
+                cellParent
+            );
+
+            SpriteRenderer sr = preview.GetComponent<SpriteRenderer>();
+            sr.sprite = src.sprite;
+            sr.color = src.color;          
+            sr.sortingOrder = 6;
+
+            previewClearCells.Add(preview);
         }
     }
 
-    public void ResetHighlightedCells()
+    void ClearPreview()
     {
-        foreach (var obj in highlightedCells)
-        {
-            if (obj != null)
-            {
-                SpriteRenderer sr = obj.GetComponent<SpriteRenderer>();
-                sr.sprite = originalSprites[obj];
-                sr.color = originalColors[obj];
-            }
-        }
-        highlightedCells.Clear();
-        originalSprites.Clear();
-        originalColors.Clear();
+        foreach (var p in previewClearCells)
+            if (p != null) Destroy(p);
+        previewClearCells.Clear();
+
+        foreach (var kv in hiddenRealCells)
+            if (kv.Value != null)
+                kv.Value.enabled = true;
+
+        hiddenRealCells.Clear();
     }
 
-    IEnumerator CheckLinesRoutine(GameObject cellPrefab)
-    {
-        List<int> rows = new List<int>();
-        List<int> cols = new List<int>();
-
-        for (int y = 0; y < height; y++)
-        {
-            bool full = true;
-            for (int x = 0; x < width; x++) if (gridObjects[x, y] == null) { full = false; break; }
-            if (full) rows.Add(y);
-        }
-        for (int x = 0; x < width; x++)
-        {
-            bool full = true;
-            for (int y = 0; y < height; y++) if (gridObjects[x, y] == null) { full = false; break; }
-            if (full) cols.Add(x);
-        }
-
-        if (rows.Count > 0 || cols.Count > 0)
-        {
-            Sprite targetSprite = cellPrefab.GetComponent<SpriteRenderer>().sprite;
-            Color targetColor = cellPrefab.GetComponent<SpriteRenderer>().color;
-
-            foreach (int y in rows) for (int x = 0; x < width; x++) UpdateCellVisual(x, y, targetSprite, targetColor);
-            foreach (int x in cols) for (int y = 0; y < height; y++) UpdateCellVisual(x, y, targetSprite, targetColor);
-
-            yield return new WaitForSeconds(0.15f);
-
-            foreach (int y in rows) for (int x = 0; x < width; x++) ClearCell(x, y);
-            foreach (int x in cols) for (int y = 0; y < height; y++) ClearCell(x, y);
-        }
-    }
-
-    void UpdateCellVisual(int x, int y, Sprite s, Color c)
-    {
-        if (gridObjects[x, y] != null)
-        {
-            var sr = gridObjects[x, y].GetComponent<SpriteRenderer>();
-            sr.sprite = s;
-            sr.color = c;
-        }
-    }
-
-    void ClearCell(int x, int y)
-    {
-        if (gridObjects[x, y] != null) { Destroy(gridObjects[x, y]); gridObjects[x, y] = null; }
-    }
 
     public void ShowGhost(List<Vector2Int> cells, GameObject cellPrefab)
     {
         ClearGhost();
-        if (cellPrefab == null) return;
+
         foreach (var c in cells)
         {
             if (!IsInside(c.x, c.y)) continue;
-            GameObject ghost = Instantiate(cellPrefab, CellToWorld(c.x, c.y), Quaternion.identity, cellParent);
+
+            GameObject ghost = Instantiate(
+                cellPrefab,
+                CellToWorld(c.x, c.y),
+                Quaternion.identity,
+                cellParent
+            );
+
             SpriteRenderer sr = ghost.GetComponent<SpriteRenderer>();
-            sr.color = new Color(sr.color.r, sr.color.g, sr.color.b, ghostAlpha);
-            sr.sortingOrder = 1;
+            sr.color = new Color(sr.color.r, sr.color.g, sr.color.b, 0.35f);
+            sr.sortingOrder = 2;
+
             ghostCells.Add(ghost);
         }
     }
 
-    public void ClearGhost() { foreach (var g in ghostCells) if (g != null) Destroy(g); ghostCells.Clear(); }
-    public bool CanPlaceAnyBlock(List<Block> blocks) {  return true; }
+    public void ClearGhost()
+    {
+        foreach (var g in ghostCells)
+            if (g != null) Destroy(g);
+        ghostCells.Clear();
+
+        ClearPreview();
+    }
+
+
+    public void PlaceBlock(
+        List<Vector2Int> cellCoords,
+        Transform blockTransform,
+        GameObject cellPrefab
+    )
+    {
+        List<Transform> children = new List<Transform>();
+        foreach (Transform c in blockTransform)
+            children.Add(c);
+
+        for (int i = 0; i < cellCoords.Count; i++)
+        {
+            Vector2Int pos = cellCoords[i];
+            GameObject cell = children[i].gameObject;
+
+            cell.name = cellPrefab.name;
+            cell.transform.SetParent(cellParent);
+            cell.transform.position = CellToWorld(pos.x, pos.y);
+            cell.GetComponent<SpriteRenderer>().sortingOrder = 3;
+
+            gridObjects[pos.x, pos.y] = cell;
+        }
+
+        ApplyFinalColor(cellPrefab);
+        StartCoroutine(ClearRoutine());
+    }
+
+    void ApplyFinalColor(GameObject cellPrefab)
+    {
+        SpriteRenderer src = cellPrefab.GetComponent<SpriteRenderer>();
+
+        foreach (var pos in willClearCells)
+        {
+            GameObject cell = gridObjects[pos.x, pos.y];
+            if (cell != null)
+            {
+                SpriteRenderer sr = cell.GetComponent<SpriteRenderer>();
+                sr.sprite = src.sprite;
+                sr.color = src.color;
+            }
+        }
+    }
+
+    IEnumerator ClearRoutine()
+    {
+        yield return new WaitForSeconds(0.15f);
+
+        foreach (var pos in willClearCells)
+            ClearCell(pos.x, pos.y);
+
+        SaveBoardData();
+    }
+
+
+    public void SaveBoardData()
+    {
+        GameSaveData data = new GameSaveData();
+
+        for (int x = 0; x < width; x++)
+            for (int y = 0; y < height; y++)
+                if (gridObjects[x, y] != null)
+                    data.placedCells.Add(new SavedCellData
+                    {
+                        x = x,
+                        y = y,
+                        name = gridObjects[x, y].name
+                    });
+
+        PlayerPrefs.SetString("PuzzleSaveKey", JsonUtility.ToJson(data));
+        PlayerPrefs.Save();
+    }
+
+    public void LoadBoardData()
+    {
+        if (!PlayerPrefs.HasKey("PuzzleSaveKey")) return;
+
+        GameSaveData data =
+            JsonUtility.FromJson<GameSaveData>(
+                PlayerPrefs.GetString("PuzzleSaveKey")
+            );
+
+        foreach (var sc in data.placedCells)
+        {
+            GameObject prefab =
+                allCellPrefabs.Find(p => p.name == sc.name);
+
+            if (prefab != null)
+            {
+                GameObject obj = Instantiate(
+                    prefab,
+                    CellToWorld(sc.x, sc.y),
+                    Quaternion.identity,
+                    cellParent
+                );
+                obj.name = prefab.name;
+                gridObjects[sc.x, sc.y] = obj;
+            }
+        }
+    }
+
+
+    void ClearCell(int x, int y)
+    {
+        if (gridObjects[x, y] != null)
+        {
+            Destroy(gridObjects[x, y]);
+            gridObjects[x, y] = null;
+        }
+    }
+
+    public Vector2 CellToWorld(int x, int y)
+    {
+        return origin + new Vector2(
+            x * cellSize + cellSize / 2f,
+            y * cellSize + cellSize / 2f
+        );
+    }
+
+    public Vector2Int WorldToCell(Vector2 pos)
+    {
+        return new Vector2Int(
+            Mathf.FloorToInt((pos.x - origin.x + cellSize / 2f) / cellSize),
+            Mathf.FloorToInt((pos.y - origin.y + cellSize / 2f) / cellSize)
+        );
+    }
+
+    public bool IsInside(int x, int y)
+    {
+        return x >= 0 && x < width && y >= 0 && y < height;
+    }
+
+    public bool IsEmpty(int x, int y)
+    {
+        return IsInside(x, y) && gridObjects[x, y] == null;
+    }
+
+    public bool CanPlaceBlock(List<Vector2Int> cells)
+    {
+        foreach (var c in cells)
+            if (!IsInside(c.x, c.y) || !IsEmpty(c.x, c.y))
+                return false;
+        return true;
+    }
+
+    public bool CanPlaceAnyBlock(List<Block> blocks) => true;
+}
+
+[System.Serializable]
+public class SavedCellData
+{
+    public int x, y;
+    public string name;
+}
+
+[System.Serializable]
+public class GameSaveData
+{
+    public List<SavedCellData> placedCells = new List<SavedCellData>();
 }
