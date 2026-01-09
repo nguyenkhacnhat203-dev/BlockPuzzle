@@ -84,6 +84,8 @@ public class BlockDrag : MonoBehaviour
         List<Vector2Int> cells = GetBoardCellsUnderMouse();
         if (board.CanPlaceBlock(cells))
         {
+            AudioManager.Instance.DropBlock();
+
             board.PlaceBlock(cells, transform, block.GetCellPrefab());
             return true;
         }
