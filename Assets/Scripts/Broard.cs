@@ -101,7 +101,6 @@ public class Board : MonoBehaviour
         }
     }
 
-
     public void ShowClearPreview(GameObject cellPrefab)
     {
         ClearPreview();
@@ -132,7 +131,7 @@ public class Board : MonoBehaviour
 
             SpriteRenderer sr = preview.GetComponent<SpriteRenderer>();
             sr.sprite = src.sprite;
-            sr.color = src.color;          
+            sr.color = src.color;
             sr.sortingOrder = 6;
 
             previewClearCells.Add(preview);
@@ -296,6 +295,7 @@ public class Board : MonoBehaviour
         }
     }
 
+
     public Vector2 CellToWorld(int x, int y)
     {
         return origin + new Vector2(
@@ -330,8 +330,41 @@ public class Board : MonoBehaviour
         return true;
     }
 
-    public bool CanPlaceAnyBlock(List<Block> blocks) => true;
+   
+
+    public bool CanPlaceAnyBlock(List<Block> blocks)
+    {
+        foreach (Block block in blocks)
+        {
+            List<Vector2Int> shape = block.GetShape();
+
+            for (int x = 0; x < width; x++)
+            {
+                for (int y = 0; y < height; y++)
+                {
+                    if (CanPlaceShapeAt(shape, x, y))
+                        return true; 
+                }
+            }
+        }
+        return false; 
+    }
+
+    bool CanPlaceShapeAt(List<Vector2Int> shape, int startX, int startY)
+    {
+        foreach (var c in shape)
+        {
+            int x = startX + c.x;
+            int y = startY + c.y;
+
+            if (!IsInside(x, y)) return false;
+            if (!IsEmpty(x, y)) return false;
+        }
+        return true;
+    }
 }
+
+// ================= SAVE DATA =================
 
 [System.Serializable]
 public class SavedCellData
