@@ -149,6 +149,8 @@ MonoBehaviour:
   x_Sound: {fileID: 576290734546657564}
   x_Music: {fileID: 2223461500783912900}
   x_Phone: {fileID: 165472507798000655}
+  soundSlider: {fileID: 0}
+  musicSlider: {fileID: 0}
 --- !u!1 &2907472888947819856
 GameObject:
   m_ObjectHideFlags: 0
@@ -269,13 +271,13 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1189227058742090862}
-        m_TargetAssemblyTypeName: 
-        m_MethodName: 
+      - m_Target: {fileID: 5936370054309526234}
+        m_TargetAssemblyTypeName: PopupSettings, Assembly-CSharp
+        m_MethodName: OnClickNewGame
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: 
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
           m_IntArgument: 0
           m_FloatArgument: 0
           m_StringArgument: 

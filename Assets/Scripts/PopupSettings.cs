@@ -103,4 +103,20 @@ public class PopupSettings : PopupBase
     }
 
     #endregion
+
+    public void OnClickNewGame()
+    {
+        AdManager.Instance.ShowRewarded(() =>
+        {
+            Board board = FindObjectOfType<Board>();
+            if (board != null)
+            {
+                board.ResetGameFromPopup();
+            }
+
+            Destroy(gameObject); 
+            PopupManager.Instance.isShowPopup = false;  
+        });
+    }
+
 }

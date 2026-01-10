@@ -6,12 +6,8 @@ public class BlockManager : MonoBehaviour
 {
     public static BlockManager Instance;
 
-    [Header("Spawn Points")]
     public Transform po1, po2, po3;
-
-    [Header("Block Prefab")]
     public GameObject blockPrefab;
-
     public Board board;
 
     private List<Block> currentBlocks = new List<Block>();
@@ -24,12 +20,10 @@ public class BlockManager : MonoBehaviour
     void OnEnable() => BlockDrag.OnBlockPlaced += HandleBlockPlaced;
     void OnDisable() => BlockDrag.OnBlockPlaced -= HandleBlockPlaced;
 
-    void Start()
-    {
-        SpawnThreeBlocks();
-    }
+    // ❌ KHÔNG spawn ở Start nữa
+    void Start() { }
 
-    void SpawnThreeBlocks()
+    public void SpawnThreeBlocks()
     {
         currentBlocks.Clear();
         StartCoroutine(SpawnRoutine());
@@ -42,50 +36,52 @@ public class BlockManager : MonoBehaviour
         yield return SpawnBlock(po2);
         yield return new WaitForSeconds(0.1f);
         yield return SpawnBlock(po3);
-
         CheckLose();
     }
 
     IEnumerator SpawnBlock(Transform point)
     {
-        GameObject obj = Instantiate(
-            blockPrefab,
-            point.position,
-            Quaternion.identity,
-            this.transform   
-        );
-        Block block = obj.GetComponent<Block>();
-        currentBlocks.Add(block);
+        GameObject obj = Instantiate(blockPrefab, point.position, Quaternion.identity, transform);
+        currentBlocks.Add(obj.GetComponent<Block>());
         yield return null;
     }
 
     void HandleBlockPlaced(Block placedBlock)
     {
         if (currentBlocks.Contains(placedBlock))
-        {
             currentBlocks.Remove(placedBlock);
-        }
 
         if (currentBlocks.Count == 0)
-        {
             SpawnThreeBlocks();
-        }
         else
-        {
             Invoke(nameof(CheckLose), 0.1f);
-        }
     }
 
     public void CheckLose()
     {
-        if (currentBlocks.Count == 0) return;
-
-        bool canMove = board.CanPlaceAnyBlock(currentBlocks);
-
-        if (!canMove)
-        {
-            Debug.LogError("❌ GAME OVER!");
-        }
-        
+        StartCoroutine(Check());
     }
+
+    IEnumerator Check()
+    {
+        yield return new WaitForSeconds(0.3f);
+        if (currentBlocks.Count == 0) yield break;
+
+
+        if (!board.CanPlaceAnyBlock(currentBlocks))
+        {
+            Debug.LogError("❌ GAME OVER! Không còn nước đi nào!");
+        }
+
+    }
+
+
+    public void ClearAllBlocks()
+    {
+        foreach (Transform child in transform)
+            Destroy(child.gameObject);
+
+        currentBlocks.Clear();
+    }
+
 }

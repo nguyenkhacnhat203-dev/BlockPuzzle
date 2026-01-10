@@ -28,6 +28,7 @@ public class BlockDrag : MonoBehaviour
 
     void OnMouseDown()
     {
+        if (PopupManager.Instance.isShowPopup == true) { return; }
         if (isPlaced) return;
 
         block.SetCellsSortingOrder(10);
@@ -40,6 +41,7 @@ public class BlockDrag : MonoBehaviour
 
     void OnMouseDrag()
     {
+        if(PopupManager.Instance.isShowPopup == true) {  return;  }
         if (isPlaced) return;
 
         transform.position = GetMouseWorldPos() + dragOffset;
@@ -60,6 +62,8 @@ public class BlockDrag : MonoBehaviour
 
     void OnMouseUp()
     {
+        if (PopupManager.Instance.isShowPopup == true) { return; }
+
         if (isPlaced) return;
 
         if (TryPlace())
