@@ -30,6 +30,9 @@ public class Board : MonoBehaviour
 
     private Dictionary<Vector2Int, GameObject> savedCellPrefabs = new Dictionary<Vector2Int, GameObject>();
 
+
+    private int linesJustCleared = 0;
+
     #region UNITY
     void Awake()
     {
@@ -136,6 +139,21 @@ public class Board : MonoBehaviour
         }
     }
 
+    public void ResetGameFromPopup()
+    {
+        StopAllCoroutines();
+        ClearGhost();
+        ClearAllCellsImmediate();
+        PlayerPrefs.DeleteKey("PuzzleSaveKey");
+
+        if (CalculateScore.Instance != null)
+        {
+            CalculateScore.Instance.ResetScoreData();
+        }
+
+        StartCoroutine(NewGameIntroRoutine());
+    }
+
     public void SaveBoardData()
     {
         GameSaveData data = new GameSaveData();
@@ -224,6 +242,7 @@ public class Board : MonoBehaviour
     public void CalculateWillClearCells(List<Vector2Int> potentialCells)
     {
         willClearCells.Clear();
+        linesJustCleared = 0; 
         bool[,] temp = new bool[width, height];
 
         for (int x = 0; x < width; x++)
@@ -241,8 +260,11 @@ public class Board : MonoBehaviour
                 if (!temp[x, y]) { full = false; break; }
 
             if (full)
+            {
+                linesJustCleared++;
                 for (int x = 0; x < width; x++)
                     willClearCells.Add(new Vector2Int(x, y));
+            }
         }
 
         for (int x = 0; x < width; x++)
@@ -252,8 +274,11 @@ public class Board : MonoBehaviour
                 if (!temp[x, y]) { full = false; break; }
 
             if (full)
+            {
+                linesJustCleared++;
                 for (int y = 0; y < height; y++)
                     willClearCells.Add(new Vector2Int(x, y));
+            }
         }
     }
 
@@ -276,6 +301,9 @@ public class Board : MonoBehaviour
         }
 
         ApplyPlacedColorToWillClearCells(prefab);
+
+        if (CalculateScore.Instance != null)
+            CalculateScore.Instance.AddPlacementScore(cells.Count);
 
         StartCoroutine(ClearRoutine());
     }
@@ -304,6 +332,14 @@ public class Board : MonoBehaviour
 
         foreach (var p in willClearCells)
             ClearCell(p.x, p.y);
+
+        if (CalculateScore.Instance != null)
+        {
+            CalculateScore.Instance.AddClearScore(linesJustCleared);
+        }
+
+        willClearCells.Clear();
+        linesJustCleared = 0;
 
         SaveBoardData();
     }
@@ -382,15 +418,6 @@ public class Board : MonoBehaviour
 
 
 
-    public void ResetGameFromPopup()
-    {
-        StopAllCoroutines();
-        ClearGhost();
-        ClearAllCellsImmediate();
-        PlayerPrefs.DeleteKey("PuzzleSaveKey");
-
-        StartCoroutine(NewGameIntroRoutine());
-    }
 
 
     void ClearAllCellsImmediate()
@@ -449,8 +476,30 @@ public class Board : MonoBehaviour
     }
 
 
+    public List<int> GetAllValidShapeIndices(List<Vector2Int[]> allPossibleShapes)
+    {
+        List<int> validIndices = new List<int>();
+        for (int i = 0; i < allPossibleShapes.Count; i++)
+        {
+            bool canFit = false;
+            List<Vector2Int> shape = new List<Vector2Int>(allPossibleShapes[i]);
+            for (int x = 0; x < width; x++)
+            {
+                for (int y = 0; y < height; y++)
+                {
+                    if (CanPlaceShapeAt(shape, x, y)) { canFit = true; break; }
+                }
+                if (canFit) break;
+            }
+            if (canFit) validIndices.Add(i);
+        }
+        return validIndices;
+    }
 
 }
+
+
+
 [System.Serializable]
 public class SavedCellData
 {

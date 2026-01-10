@@ -1310,8 +1310,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Score: 0
-  HightestScore: 0
+  HighestScore: 0
   Score_text: {fileID: 1595499371}
+  HighestScore_text: {fileID: 628786743}
 --- !u!1 &1575090336
 GameObject:
   m_ObjectHideFlags: 0
@@ -1918,6 +1919,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 10af54efbff989043980ab48a8952f17, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  pointsPerLine: 8
+  maxLosesAllowed: 5
 --- !u!4 &5239316820433061906
 Transform:
   m_ObjectHideFlags: 0
