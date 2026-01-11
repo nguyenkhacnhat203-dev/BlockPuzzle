@@ -57,12 +57,53 @@ public class BlockManager : MonoBehaviour
         yield return new WaitForSeconds(0.3f);
         if (currentBlocks.Count == 0) yield break;
         if (!board.CanPlaceAnyBlock(currentBlocks))
-            Debug.LogError("GAME OVER!");
+            StartCoroutine(ShowLosePopupDelay());
+
     }
+
+    IEnumerator ShowLosePopupDelay()
+    {
+        yield return new WaitForSeconds(2f);
+
+        if (PopupManager.Instance != null)
+        {
+            AudioManager.Instance.Loss();
+            PopupManager.Instance.ShowPopup_Loss();
+        }
+    }
+
 
     public void ClearAllBlocks()
     {
         foreach (Transform child in transform) Destroy(child.gameObject);
         currentBlocks.Clear();
     }
+
+
+    public void ReviveSpawnBlocks()
+    {
+        ClearAllBlocks();
+
+        StartCoroutine(ReviveSpawnRoutine());
+    }
+
+    IEnumerator ReviveSpawnRoutine()
+    {
+        List<int> validIndices = board.GetAllValidShapeIndices(Block.AllPossibleShapes);
+
+        int guaranteedIndex = validIndices.Count > 0
+            ? validIndices[Random.Range(0, validIndices.Count)]
+            : Random.Range(0, Block.AllPossibleShapes.Count);
+
+        yield return SpawnBlock(po1, guaranteedIndex);
+        yield return new WaitForSeconds(0.1f);
+
+        yield return SpawnBlock(po2, Random.Range(0, Block.AllPossibleShapes.Count));
+        yield return new WaitForSeconds(0.1f);
+
+        yield return SpawnBlock(po3, Random.Range(0, Block.AllPossibleShapes.Count));
+    }
+
+
+
 }

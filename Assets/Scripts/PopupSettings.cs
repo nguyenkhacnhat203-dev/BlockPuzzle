@@ -88,8 +88,8 @@ public class PopupSettings : PopupBase
 
     private void ApplySettings()
     {
-        float soundVol = PlayerPrefs.GetFloat(SOUND_VOL_KEY, 0.5f);
-        float musicVol = PlayerPrefs.GetFloat(MUSIC_VOL_KEY, 0.5f);
+        float soundVol = PlayerPrefs.GetFloat(SOUND_VOL_KEY, 0.7f);
+        float musicVol = PlayerPrefs.GetFloat(MUSIC_VOL_KEY, 0.7f);
 
         if (soundSlider != null) soundSlider.value = soundVol;
         if (musicSlider != null) musicSlider.value = musicVol;
@@ -118,5 +118,8 @@ public class PopupSettings : PopupBase
             PopupManager.Instance.isShowPopup = false;  
         });
     }
+
+  
+
 
 }

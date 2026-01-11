@@ -949,6 +949,7 @@ MonoBehaviour:
   - {fileID: 8300000, guid: dd968f790547e824ab63223eb7cb569d, type: 3}
   - {fileID: 8300000, guid: d0f758c5aea86064f93e1ae2c7314f31, type: 3}
   - {fileID: 8300000, guid: f858224b7683cbc479bdd072278e73d6, type: 3}
+  - {fileID: 8300000, guid: 27fc7b8b5684be642a21f3f195093abd, type: 3}
 --- !u!4 &906409264
 Transform:
   m_ObjectHideFlags: 0
@@ -1313,6 +1314,8 @@ MonoBehaviour:
   HighestScore: 0
   Score_text: {fileID: 1595499371}
   HighestScore_text: {fileID: 628786743}
+  pulseScale: 1.4
+  pulseDuration: 0.1
 --- !u!1 &1575090336
 GameObject:
   m_ObjectHideFlags: 0
@@ -1796,6 +1799,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _dontDestroyOnLoad: 1
   popup_Setting: {fileID: 1189227058742090862, guid: af0f33dcade22864086ad12420cebbca, type: 3}
+  popup_Loss: {fileID: 8454690923449357207, guid: 5028114e55bc4dd489bf3e118f971555, type: 3}
   popupParent: {fileID: 1977592021}
   isShowPopup: 0
   Setting: {fileID: 758847151}

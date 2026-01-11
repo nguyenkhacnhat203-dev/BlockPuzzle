@@ -3,15 +3,24 @@
 public class CalculateScore : MonoBehaviour
 {
     public static CalculateScore Instance;
+
+    [Header("Score Settings")]
     public int pointsPerLine = 8;
     public int maxLosesAllowed = 3;
 
     private int currentComboMultiplier = 1;
     private int consecutiveLoses = 0;
 
-    void Awake() { Instance = this; }
+    void Awake()
+    {
+        Instance = this;
+    }
 
-    public void AddPlacementScore(int cellCount) => UiGame.Instance.AddScore(cellCount);
+    public void AddPlacementScore(int cellCount)
+    {
+        if (UiGame.Instance != null)
+            UiGame.Instance.AddScore(cellCount);
+    }
 
     public void AddClearScore(int linesCleared)
     {
@@ -19,12 +28,14 @@ public class CalculateScore : MonoBehaviour
         {
             int points = pointsPerLine * linesCleared * currentComboMultiplier;
             UiGame.Instance.AddScore(points);
+
             currentComboMultiplier++;
             consecutiveLoses = 0;
         }
         else
         {
             consecutiveLoses++;
+
             if (consecutiveLoses > maxLosesAllowed)
             {
                 currentComboMultiplier = 1;
@@ -37,6 +48,7 @@ public class CalculateScore : MonoBehaviour
     {
         currentComboMultiplier = 1;
         consecutiveLoses = 0;
+
         if (UiGame.Instance != null)
         {
             UiGame.Instance.Score = 0;

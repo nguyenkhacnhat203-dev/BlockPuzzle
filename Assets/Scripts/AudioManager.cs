@@ -46,6 +46,7 @@ public class AudioManager : Singleton<AudioManager>
     public void Btn_Click() => PlaySoundEffect(0);
     public void Btn_Click1() => PlaySoundEffect(1);
     public void DropBlock() => PlaySoundEffect(2);
+    public void Loss() => PlaySoundEffect(4);
 
     public void Reload()
     {
@@ -103,7 +104,7 @@ public class AudioManager : Singleton<AudioManager>
     private void ApplyMusicVolume()
     {
         bool isOn = PlayerPrefs.GetInt(MUSIC_ON_KEY, 1) == 1;
-        float vol = PlayerPrefs.GetFloat(MUSIC_VOL_KEY, 0.5f);
+        float vol = PlayerPrefs.GetFloat(MUSIC_VOL_KEY, 0.7f);
 
         backgroundMusicSource.volume = isOn ? vol : 0f;
 
@@ -116,7 +117,7 @@ public class AudioManager : Singleton<AudioManager>
     private void ApplySoundVolume()
     {
         bool isOn = PlayerPrefs.GetInt(SOUND_ON_KEY, 1) == 1;
-        float vol = PlayerPrefs.GetFloat(SOUND_VOL_KEY, 0.5f);
+        float vol = PlayerPrefs.GetFloat(SOUND_VOL_KEY, 0.7f);
 
         soundEffectSource.volume = isOn ? vol : 0f;
     }

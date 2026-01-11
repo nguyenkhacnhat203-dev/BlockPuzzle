@@ -496,6 +496,46 @@ public class Board : MonoBehaviour
         return validIndices;
     }
 
+
+
+
+    public void ReviveClearHalfBoard()
+    {
+        List<Vector2Int> occupied = new List<Vector2Int>();
+
+        for (int x = 0; x < width; x++)
+            for (int y = 0; y < height; y++)
+                if (gridObjects[x, y] != null)
+                    occupied.Add(new Vector2Int(x, y));
+
+        if (occupied.Count == 0) return;
+
+        for (int i = 0; i < occupied.Count; i++)
+        {
+            int r = Random.Range(i, occupied.Count);
+            (occupied[i], occupied[r]) = (occupied[r], occupied[i]);
+        }
+
+        int removeCount = occupied.Count / 2;
+
+        for (int i = 0; i < removeCount; i++)
+        {
+            ClearCell(occupied[i].x, occupied[i].y);
+        }
+
+        SaveBoardData();
+    }
+
+
+
+
+
+
+
+
+
+
+
 }
 
 

@@ -11,6 +11,7 @@ public class PopupManager : Singleton<PopupManager>
 
     [Header("Popup Prefabs")]
     public GameObject popup_Setting;
+    public GameObject popup_Loss;
   
 
     [Header("Popup Parent (Canvas)")]
@@ -23,6 +24,7 @@ public class PopupManager : Singleton<PopupManager>
 
 
     public Button Setting;
+    //public Button Loss;
    
 
 
@@ -36,10 +38,16 @@ public class PopupManager : Singleton<PopupManager>
             AddPointerDownListener(Setting, () => OnDown());
         }
 
+        // if (Loss != null)
+        //{
+        //    AddPointerDownListener(Loss, () => OnDown());
+        //}
+
 
 
         parentCanvas = GetComponent<Canvas>();
         Setting.onClick.AddListener(ShowPopup_Setting);
+
 
 
 
@@ -95,6 +103,13 @@ public class PopupManager : Singleton<PopupManager>
     {
         if (popup_Setting == null) return;
         CreatePopup(popup_Setting);
+    }
+
+ 
+    public void ShowPopup_Loss()
+    {
+        if (popup_Loss == null) return;
+        CreatePopup(popup_Loss);
     }
 
  
