@@ -71,7 +71,7 @@ public class PopupLoss : PopupBase
             Destroy(gameObject);
         });
     }
-    private void OnApplicationQuit()
+    private void OnDisable()
     {
         if(isRevive == false)
         {

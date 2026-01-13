@@ -87,7 +87,7 @@ public class UiGame : MonoBehaviour
     #endregion
 
     #region SAVE LAST SCORE
-    void OnApplicationQuit()
+    void OnDisable()
     {
         SaveLastScore();
     }
