@@ -108,14 +108,19 @@ public class PopupSettings : PopupBase
     {
         AdManager.Instance.ShowRewarded(() =>
         {
+            if (UiGame.Instance != null)
+            {
+                UiGame.Instance.ResetScore();
+            }
+
             Board board = FindObjectOfType<Board>();
             if (board != null)
             {
                 board.ResetGameFromPopup();
             }
 
-            Destroy(gameObject); 
-            PopupManager.Instance.isShowPopup = false;  
+            PopupManager.Instance.isShowPopup = false;
+            Destroy(gameObject);
         });
     }
 

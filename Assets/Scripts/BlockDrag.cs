@@ -92,7 +92,7 @@ public class BlockDrag : MonoBehaviour
         return false;
     }
 
-    void ReturnToTray()
+    public void ReturnToTray()
     {
         block.SetCellsSortingOrder(3);
         transform.position = startPos;

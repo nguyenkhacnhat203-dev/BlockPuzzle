@@ -69,6 +69,13 @@ public class BlockManager : MonoBehaviour
         {
             AudioManager.Instance.Loss();
             PopupManager.Instance.ShowPopup_Loss();
+            BlockDrag[] blockDrags = FindObjectsOfType<BlockDrag>();
+
+            foreach (BlockDrag block in blockDrags)
+            {
+                block.ReturnToTray();
+            }
+
         }
     }
 

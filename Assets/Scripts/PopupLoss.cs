@@ -38,17 +38,21 @@ public class PopupLoss : PopupBase
 
     public void OnClickNewGame()
     {
-        
-            Board board = FindObjectOfType<Board>();
-            if (board != null)
-            {
-                board.ResetGameFromPopup();
-            }
+        if (UiGame.Instance != null)
+        {
+            UiGame.Instance.ResetScore(); 
+        }
 
-            Destroy(gameObject);
-            PopupManager.Instance.isShowPopup = false;
-        
+        Board board = FindObjectOfType<Board>();
+        if (board != null)
+        {
+            board.ResetGameFromPopup();
+        }
+
+        PopupManager.Instance.isShowPopup = false;
+        Destroy(gameObject);
     }
+
     public void OnClickRevive()
     {
         AdManager.Instance.ShowRewarded(() =>

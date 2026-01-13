@@ -109,4 +109,15 @@ public class UiGame : MonoBehaviour
         return PlayerPrefs.GetInt(LAST_SCORE_KEY, 0);
     }
     #endregion
+
+
+    public void ResetScore()
+    {
+        Score = 0;
+        PlayerPrefs.SetInt(LAST_SCORE_KEY, 0);
+        PlayerPrefs.Save();
+        UpdateUI();
+    }
+
+
 }
